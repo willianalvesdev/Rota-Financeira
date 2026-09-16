@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro - Rota Financeira{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white text-center">
+                <h4>Criar Nova Conta</h4>
+            </div>
+            <div class="card-body p-4">
+                <form action="/fazer-cadastro" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" name="nome" required placeholder="Como quer ser chamado?">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" class="form-control" name="email" required placeholder="seu@email.com">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Senha</label>
+                        <input type="password" class="form-control" name="senha" required>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Cadastrar</button>
+                </form>
+                <div class="text-center mt-3">
+                    <p>Já possui conta? <a href="/login">Faça login</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

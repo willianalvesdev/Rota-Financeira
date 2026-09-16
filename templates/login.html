@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Rota Financeira{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-header bg-dark text-white text-center">
+                <h4>Entrar no Sistema</h4>
+            </div>
+            <div class="card-body p-4">
+                <form action="/fazer-login" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">E-mail</label>
+                        <input type="email" class="form-control" name="email" required placeholder="seu@email.com">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label">Senha</label>
+                        <input type="password" class="form-control" name="senha" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Entrar</button>
+                </form>
+                <div class="text-center mt-3">
+                    <p>Ainda não tem uma conta? <a href="/cadastro">Cadastre-se aqui</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

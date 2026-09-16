@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Rota Financeira{% endblock %}</title>
+    <!-- CSS do Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Biblioteca do Gráfico (Movida para cá!) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-light">
+    
+    <!-- Navbar Global -->
+<!-- Navbar Global -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand mb-0 h1 text-white text-decoration-none" href="/">Rota Financeira</a>
+            
+            <!-- Botão do menu hamburguer para celular -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <!-- Links do Menu -->
+            <div class="collapse navbar-collapse" id="menuPrincipal">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    {% if session.get('usuario_id') %}
+                        <!-- SE ESTIVER LOGADO -->
+                        <li class="nav-item">
+                            <a class="nav-link text-warning fw-bold" href="/">Dashboard</a>
+                        </li>
+                        <li class="nav-item ms-3 text-white">
+                            Olá, <strong>{{ session.get('usuario_nome') }}</strong>
+                        </li>
+                        <li class="nav-item ms-3">
+                            <a class="btn btn-outline-danger btn-sm" href="/logout">Sair</a>
+                        </li>
+                    {% else %}
+                        <!-- SE NÃO ESTIVER LOGADO -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="/login">Entrar</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-success ms-2" href="/cadastro">Criar Conta</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- O CONTEÚDO ESPECÍFICO DE CADA PÁGINA VAI ENTRAR AQUI -->
+    <main class="container">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Scripts Globais do Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
