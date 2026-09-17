@@ -1,38 +1,48 @@
-USE rota_financeira_db;
+-- MySQL 8.0.16+ (CHECK constraints). Execução repetida não apaga dados.
+CREATE DATABASE IF NOT EXISTS `rota_financeira_db`
+    CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `rota_financeira_db`;
 
 CREATE TABLE IF NOT EXISTS usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    senha VARCHAR(255) NOT NULL
-);
--- ========================================================
--- CONSULTAS DE HOMOLOGAÇÃO (META #8)
--- ========================================================
+    email VARCHAR(254) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_usuarios_email UNIQUE (email)
+) ENGINE=InnoDB;
 
--- TESTE 1: Agrupar e somar apenas as RECEITAS por mês
-SELECT 
-    MONTH(data_transacao) AS numero_mes,
-    SUM(valor) AS total_mensal
-FROM transacoes
-WHERE tipo = 'receita'
-GROUP BY MONTH(data_transacao)
-ORDER BY numero_mes;
+CREATE TABLE IF NOT EXISTS sessoes (
+    token_hash CHAR(64) CHARACTER SET ascii COLLATE ascii_bin PRIMARY KEY,
+    usuario_id INT UNSIGNED NOT NULL,
+    expira_em DATETIME NOT NULL,
+    CONSTRAINT fk_sessoes_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    INDEX idx_sessoes_usuario_expiracao (usuario_id, expira_em)
+) ENGINE=InnoDB;
 
--- TESTE 2: Agrupar e somar apenas as DESPESAS por mês
-SELECT 
-    MONTH(data_transacao) AS numero_mes,
-    SUM(valor) AS total_mensal
-FROM transacoes
-WHERE tipo = 'despesa'
-GROUP BY MONTH(data_transacao)
-ORDER BY numero_mes;
+CREATE TABLE IF NOT EXISTS transacoes (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT UNSIGNED NOT NULL,
+    descricao VARCHAR(160) NOT NULL,
+    valor DECIMAL(12, 2) NOT NULL,
+    tipo ENUM('receita', 'despesa') NOT NULL,
+    data_transacao DATE NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_transacoes_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    CONSTRAINT chk_transacoes_valor CHECK (valor > 0),
+    INDEX idx_transacoes_usuario_data (usuario_id, data_transacao, id)
+) ENGINE=InnoDB;
 
--- TESTE 3: Homologação das Metas Cadastradas
-SELECT 
-    id,
-    nome_meta, 
-    valor_alvo, 
-    valor_atual, 
-    data_limite 
-FROM metas;
+CREATE TABLE IF NOT EXISTS metas (
+    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    usuario_id INT UNSIGNED NOT NULL,
+    nome_meta VARCHAR(120) NOT NULL,
+    valor_alvo DECIMAL(12, 2) NOT NULL,
+    valor_atual DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
+    data_limite DATE NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_metas_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
+    CONSTRAINT chk_metas_alvo CHECK (valor_alvo > 0),
+    CONSTRAINT chk_metas_atual CHECK (valor_atual >= 0),
+    INDEX idx_metas_usuario_prazo (usuario_id, data_limite, id)
+) ENGINE=InnoDB;

@@ -1,35 +1,22 @@
 {% extends 'base.html' %}
-
-{% block title %}Cadastro - Rota Financeira{% endblock %}
-
+{% from 'macros.html' import auth_visual, csrf_fields %}
+{% block title %}Criar conta · Rota Financeira{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-header bg-success text-white text-center">
-                <h4>Criar Nova Conta</h4>
-            </div>
-            <div class="card-body p-4">
-                <form action="/fazer-cadastro" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">Nome Completo</label>
-                        <input type="text" class="form-control" name="nome" required placeholder="Como quer ser chamado?">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">E-mail</label>
-                        <input type="email" class="form-control" name="email" required placeholder="seu@email.com">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">Senha</label>
-                        <input type="password" class="form-control" name="senha" required>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100">Cadastrar</button>
-                </form>
-                <div class="text-center mt-3">
-                    <p>Já possui conta? <a href="/login">Faça login</a></p>
-                </div>
-            </div>
+<div class="auth-layout">
+    {{ auth_visual() }}
+    <section class="auth-form-panel" aria-labelledby="auth-title">
+        <div class="auth-form-inner"><span class="eyebrow">CADA CONQUISTA TEM UM COMEÇO</span><h2 id="auth-title">Comece a sua rota.</h2><p class="auth-description">Crie sua conta e dê direção aos seus planos.</p>
+            {% if erro %}<p class="flash flash-error" role="alert">{{ erro }}</p>{% endif %}
+            <form action="{{ url_for('fazer_cadastro') }}" method="post" class="form-stack" data-confirm-password>
+                {{ csrf_fields() }}
+                <div class="field"><label for="nome">Seu nome</label><input id="nome" name="nome" type="text" value="{{ valores.get('nome', '') }}" placeholder="Como podemos chamar você?" autocomplete="name" minlength="2" maxlength="100" required autofocus></div>
+                <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" value="{{ valores.get('email', '') }}" placeholder="voce@exemplo.com" autocomplete="email" maxlength="254" required></div>
+                <div class="field"><label for="senha">Crie uma senha</label><div class="password-field"><input id="senha" name="senha" type="password" placeholder="Pelo menos 8 caracteres" autocomplete="new-password" minlength="8" maxlength="128" aria-describedby="senha-ajuda" required><button type="button" class="icon-button password-toggle" data-password-toggle="senha" aria-label="Mostrar senha" aria-pressed="false">{{ icon('eye') }}</button></div><span class="field-hint" id="senha-ajuda">Use de 8 a 128 caracteres. Combine letras, números e símbolos.</span></div>
+                <div class="field"><label for="confirmar-senha">Confirme sua senha</label><div class="password-field"><input id="confirmar-senha" name="confirmar_senha" type="password" placeholder="Digite a senha novamente" autocomplete="new-password" minlength="8" maxlength="128" required><button type="button" class="icon-button password-toggle" data-password-toggle="confirmar-senha" aria-label="Mostrar confirmação de senha" aria-pressed="false">{{ icon('eye') }}</button></div></div>
+                <button class="button button-primary button-full auth-submit" type="submit">Criar minha conta {{ icon('arrow-right') }}</button>
+            </form>
+            <p class="auth-switch">Já tem uma conta? <a href="{{ url_for('login') }}">Entre aqui</a></p>
         </div>
-    </div>
+    </section>
 </div>
 {% endblock %}

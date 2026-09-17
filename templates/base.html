@@ -1,62 +1,53 @@
+{% from 'macros.html' import icon %}
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR" data-theme="light">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <meta name="description" content="Organize suas finanças, acompanhe seus gastos e dê o próximo passo em direção aos seus objetivos.">
     <title>{% block title %}Rota Financeira{% endblock %}</title>
-    <!-- CSS do Bootstrap -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Biblioteca do Gráfico (Movida para cá!) -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </head>
-<body class="bg-light">
-    
-    <!-- Navbar Global -->
-<!-- Navbar Global -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand mb-0 h1 text-white text-decoration-none" href="/">Rota Financeira</a>
-            
-            <!-- Botão do menu hamburguer para celular -->
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            
-            <!-- Links do Menu -->
-            <div class="collapse navbar-collapse" id="menuPrincipal">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
-                    {% if session.get('usuario_id') %}
-                        <!-- SE ESTIVER LOGADO -->
-                        <li class="nav-item">
-                            <a class="nav-link text-warning fw-bold" href="/">Dashboard</a>
-                        </li>
-                        <li class="nav-item ms-3 text-white">
-                            Olá, <strong>{{ session.get('usuario_nome') }}</strong>
-                        </li>
-                        <li class="nav-item ms-3">
-                            <a class="btn btn-outline-danger btn-sm" href="/logout">Sair</a>
-                        </li>
-                    {% else %}
-                        <!-- SE NÃO ESTIVER LOGADO -->
-                        <li class="nav-item">
-                            <a class="nav-link" href="/login">Entrar</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-success ms-2" href="/cadastro">Criar Conta</a>
-                        </li>
-                    {% endif %}
-                </ul>
+<body class="{% if session.get('usuario_id') %}app-layout{% else %}public-layout{% endif %}">
+    <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+    {% if session.get('usuario_id') %}
+    <aside class="sidebar" aria-label="Menu principal">
+        <a class="brand" href="{{ url_for('index') }}" aria-label="Rota Financeira, início">
+            <img class="brand-logo" src="{{ url_for('static', filename='img/logo-black.svg') }}" width="36" height="36" alt="">
+            <span>rota</span>
+        </a>
+        <div class="sidebar-label">SEU ESPAÇO</div>
+        <nav class="sidebar-nav" aria-label="Navegação">
+            <a class="nav-link is-active" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#visao-geral">{{ icon('grid') }}<span>Visão geral</span></a>
+            <a class="nav-link" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#transacoes">{{ icon('arrows') }}<span>Transações</span></a>
+            <a class="nav-link" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#objetivos">{{ icon('target') }}<span>Meus objetivos</span></a>
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="sidebar-note"><span class="note-icon">{{ icon('sparkles') }}</span><strong>Um passo de cada vez.</strong><p>Pequenas escolhas hoje.<br>Mais possibilidades amanhã.</p></div>
+            <div class="user-profile">
+                <span class="avatar" aria-hidden="true">{{ session.get('usuario_nome', 'U')[:1] | upper }}</span>
+                <div class="user-name"><strong>{{ session.get('usuario_nome', 'Minha conta') }}</strong><span>Minha conta pessoal</span></div>
+                <form action="{{ url_for('logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="icon-button logout-button" type="submit" aria-label="Sair da conta" title="Sair da conta">{{ icon('logout') }}</button></form>
             </div>
         </div>
-    </nav>
-    
-    <!-- O CONTEÚDO ESPECÍFICO DE CADA PÁGINA VAI ENTRAR AQUI -->
-    <main class="container">
-        {% block content %}
-        {% endblock %}
+    </aside>
+    <div class="app-main">
+        <header class="topbar"><div class="topbar-location">Meu painel <span>/</span> <strong>Finanças pessoais</strong></div><button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Ativar tema escuro" title="Alternar tema">{{ icon('moon', 'theme-moon') }}{{ icon('sun', 'theme-sun') }}</button></header>
+    {% else %}
+    <button class="icon-button theme-toggle public-theme-toggle" type="button" data-theme-toggle aria-label="Ativar tema escuro" title="Alternar tema">{{ icon('moon', 'theme-moon') }}{{ icon('sun', 'theme-sun') }}</button>
+    {% endif %}
+    <main id="conteudo" class="{% if session.get('usuario_id') %}page-content{% else %}public-content{% endif %}" tabindex="-1">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}<div class="flash-stack" aria-live="polite">{% for category, message in messages %}<div class="flash flash-{{ category }}" role="{% if category == 'error' %}alert{% else %}status{% endif %}">{{ icon('info') }}<span>{{ message }}</span><button class="icon-button" type="button" data-dismiss-flash aria-label="Fechar aviso">{{ icon('close') }}</button></div>{% endfor %}</div>{% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
     </main>
-
-    <!-- Scripts Globais do Bootstrap -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% if session.get('usuario_id') %}
+        <footer class="app-footer"><span>rota</span><span>Mais clareza para o seu próximo passo.</span></footer>
+    </div>
+    {% endif %}
 </body>
 </html>

@@ -1,225 +1,74 @@
 {% extends 'base.html' %}
-
-{% block title %}Dashboard - Rota Financeira{% endblock %}
-
+{% from 'macros.html' import csrf_fields %}
+{% block title %}Visão geral · Rota Financeira{% endblock %}
 {% block content %}
-<!-- INÍCIO DA META #7 e #8: Cards de Resumo Financeiro Dinâmicos -->
-<div class="row text-center mb-4">
-    <!-- Card de Receitas -->
-    <div class="col-md-4 mb-3">
-        <div class="card text-white bg-success shadow rounded-0">
-            <div class="card-body">
-                <h5 class="card-title">Receitas (Mês)</h5>
-                <h3 class="card-text" id="total-receitas">R$ {{ receitas_html | moeda }}</h3>
-            </div>
-        </div>
+<noscript><div class="flash flash-info">Ative o JavaScript para criar e editar registros, alternar o tema e visualizar o gráfico. Os dados do gráfico também estão disponíveis na tabela anual.</div></noscript>
+<section id="visao-geral" aria-labelledby="dashboard-title">
+    <div class="page-heading">
+        <div><span class="eyebrow">SUA VIDA FINANCEIRA, MAIS LEVE</span><h1 id="dashboard-title">Visão geral<span class="heading-dot">.</span></h1><p>Olá, {{ session.get('usuario_nome', '').split(' ')[0] }}. Vamos cuidar do seu próximo passo?</p></div>
+        <button class="button button-primary" type="button" data-dialog="transaction-dialog">{{ icon('plus') }} Nova transação</button>
     </div>
-    
-    <!-- Card de Despesas -->
-    <div class="col-md-4 mb-3">
-        <div class="card text-white bg-danger shadow rounded-0">
-            <div class="card-body">
-                <h5 class="card-title">Despesas (Mês)</h5>
-                <h3 class="card-text" id="total-despesas">R$ {{ despesas_html | moeda }}</h3>
-            </div>
-        </div>
+    <div class="period-row"><h2>Seu resumo de <span>{{ mes_label | lower }}</span></h2><form method="get" action="{{ url_for('index') }}" class="period-form"><label class="visually-hidden" for="month">Mês de referência</label><div class="month-field">{{ icon('calendar') }}<input id="month" name="month" type="month" value="{{ mes_selecionado }}" required></div>{% if busca %}<input type="hidden" name="q" value="{{ busca }}">{% endif %}{% if tipo_filtro %}<input type="hidden" name="tipo" value="{{ tipo_filtro }}">{% endif %}<button class="button button-secondary button-small" type="submit">Aplicar</button></form></div>
+    <div class="summary-grid">
+        <article class="summary-card balance-card"><div class="summary-label"><span>Saldo acumulado</span><span class="summary-icon">{{ icon('wallet') }}</span></div><strong class="summary-amount" id="saldo-atual">R$ {{ saldo_html | moeda }}</strong><p>Receitas menos despesas de todo o período</p></article>
+        <article class="summary-card"><div class="summary-label"><span>Receitas do mês</span><span class="summary-icon positive-soft">{{ icon('arrow-up') }}</span></div><strong class="summary-amount" id="total-receitas">R$ {{ receitas_html | moeda }}</strong><p><span class="status-dot positive-dot"></span> Entradas em {{ mes_label | lower }}</p></article>
+        <article class="summary-card"><div class="summary-label"><span>Despesas do mês</span><span class="summary-icon negative-soft">{{ icon('arrow-down') }}</span></div><strong class="summary-amount" id="total-despesas">R$ {{ despesas_html | moeda }}</strong><p><span class="status-dot negative-dot"></span> Saídas em {{ mes_label | lower }}</p></article>
     </div>
+    <div class="overview-grid">
+        <section class="panel chart-panel" aria-labelledby="chart-title"><div class="panel-header"><div><span class="eyebrow">OLHAR PARA O TODO</span><h2 id="chart-title">Seu ano em movimento</h2><p>Receitas e despesas ao longo de {{ ano_selecionado }}.</p></div><span class="year-badge">{{ ano_selecionado }}</span></div>
+            <div class="chart-legend" aria-hidden="true"><span><i class="legend-dot income-dot"></i>Receitas</span><span><i class="legend-dot expense-dot"></i>Despesas</span></div>
+            <div class="chart-container" data-chart='{{ {"receitas": receitas_grafico, "despesas": despesas_grafico, "ano": ano_selecionado} | tojson }}' aria-label="Gráfico comparativo de receitas e despesas em {{ ano_selecionado }}"></div>
+            <details class="chart-data"><summary>Consultar valores por mês</summary><div class="table-scroll"><table><caption class="visually-hidden">Receitas e despesas mensais em {{ ano_selecionado }}</caption><thead><tr><th scope="col">Mês</th><th scope="col">Receitas</th><th scope="col">Despesas</th></tr></thead><tbody>{% for mes in ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'] %}<tr><th scope="row">{{ mes }}</th><td>R$ {{ receitas_grafico[loop.index0] | moeda }}</td><td>R$ {{ despesas_grafico[loop.index0] | moeda }}</td></tr>{% endfor %}</tbody></table></div></details>
+        </section>
+        <aside class="month-insight" aria-labelledby="insight-title"><span class="insight-icon">{{ icon('sparkles') }}</span><span class="eyebrow">FOCO NO PRESENTE</span><h2 id="insight-title">Cada escolha <br>faz diferença.</h2><p>Acompanhar suas movimentações é o primeiro passo para planejar com tranquilidade.</p><div class="month-result"><span>Resultado do mês</span><strong class="{% if receitas_html - despesas_html < 0 %}negative-text{% else %}positive-text{% endif %}">R$ {{ (receitas_html - despesas_html) | moeda }}</strong><small>Receitas − despesas de {{ mes_label | lower }}.</small></div><a class="text-link" href="#objetivos">Olhar para meus objetivos {{ icon('arrow-right') }}</a></aside>
+    </div>
+</section>
+<section id="transacoes" class="panel transactions-panel" aria-labelledby="transactions-title">
+    <div class="panel-header"><div><span class="eyebrow">CADA MOVIMENTO CONTA</span><h2 id="transactions-title">Suas transações</h2><p>O que entrou e saiu em {{ mes_label | lower }}.</p></div><span class="count-badge">{{ total_transacoes }} {{ 'registro' if total_transacoes == 1 else 'registros' }}</span></div>
+    <form method="get" action="{{ url_for('index') }}#transacoes" class="filter-form"><input type="hidden" name="month" value="{{ mes_selecionado }}"><div class="search-field">{{ icon('search') }}<label class="visually-hidden" for="busca">Buscar pela descrição</label><input id="busca" name="q" type="search" value="{{ busca }}" maxlength="160" placeholder="Buscar uma transação..."></div><div class="filter-select"><label class="visually-hidden" for="tipo-filtro">Tipo de transação</label><select id="tipo-filtro" name="tipo"><option value="">Todos os tipos</option><option value="receita" {% if tipo_filtro == 'receita' %}selected{% endif %}>Receitas</option><option value="despesa" {% if tipo_filtro == 'despesa' %}selected{% endif %}>Despesas</option></select></div><button class="button button-secondary" type="submit">Filtrar</button>{% if busca or tipo_filtro %}<a class="clear-link" href="{{ url_for('index', month=mes_selecionado) }}#transacoes">Limpar</a>{% endif %}</form>
+    {% if lista_para_html %}
+    <div class="table-scroll transaction-table-scroll" role="region" aria-label="Lista de transações" tabindex="0"><table class="transaction-table"><caption class="visually-hidden">Transações de {{ mes_label }}</caption><thead><tr><th scope="col">Descrição</th><th scope="col">Data</th><th scope="col">Tipo</th><th class="amount-column" scope="col">Valor</th><th class="actions-column" scope="col">Ações</th></tr></thead><tbody>
+    {% for transacao in lista_para_html %}
+    <tr><td><div class="transaction-description"><span class="transaction-icon {% if transacao.tipo == 'receita' %}positive-soft{% else %}negative-soft{% endif %}">{{ icon('arrow-up' if transacao.tipo == 'receita' else 'arrow-down') }}</span><strong>{{ transacao.descricao }}</strong></div></td><td class="date-cell">{{ transacao.data_transacao | data_br }}</td><td><span class="type-badge type-{{ transacao.tipo }}">{{ 'Receita' if transacao.tipo == 'receita' else 'Despesa' }}</span></td><td class="amount-column transaction-amount {% if transacao.tipo == 'receita' %}positive-text{% endif %}">{{ '+' if transacao.tipo == 'receita' else '−' }} R$ {{ transacao.valor | moeda }}</td><td><div class="row-actions"><button class="icon-button" type="button" data-dialog="transaction-dialog" data-action="{{ url_for('editar_transacao', transacao_id=transacao.id) }}" data-title="Editar transação" data-submit-label="Salvar alterações" data-values='{{ {"descricao": transacao.descricao, "valor": transacao.valor|string, "tipo": transacao.tipo, "data_transacao": transacao.data_transacao|string} | tojson }}' aria-label="Editar {{ transacao.descricao }}" title="Editar transação">{{ icon('edit') }}</button><button class="icon-button danger-hover" type="button" data-dialog="delete-dialog" data-action="{{ url_for('excluir_transacao', transacao_id=transacao.id) }}" data-title="Excluir transação?" data-description='Excluir “{{ transacao.descricao }}”? O saldo será atualizado. Esta ação não pode ser desfeita.' aria-label="Excluir {{ transacao.descricao }}" title="Excluir transação">{{ icon('trash') }}</button></div></td></tr>
+    {% endfor %}
+    </tbody></table></div>
+    {% else %}
+    <div class="empty-state"><span class="empty-icon">{{ icon('arrows') }}</span><h3>{{ 'Nenhum resultado por aqui' if busca or tipo_filtro else 'Um novo mês, uma nova rota' }}</h3><p>{{ 'Tente outra descrição ou remova os filtros para ver mais transações.' if busca or tipo_filtro else 'Registre sua primeira receita ou despesa e acompanhe tudo por aqui.' }}</p>{% if busca or tipo_filtro %}<a class="button button-secondary button-small" href="{{ url_for('index', month=mes_selecionado) }}#transacoes">Limpar filtros</a>{% else %}<button class="button button-secondary button-small" type="button" data-dialog="transaction-dialog">{{ icon('plus') }} Adicionar transação</button>{% endif %}</div>
+    {% endif %}
+    <div class="table-footer"><span>{{ lista_para_html | length }} de {{ total_transacoes }} {{ 'transação' if total_transacoes == 1 else 'transações' }}</span>{% if paginas > 1 %}<nav class="pagination" aria-label="Paginação de transações">{% if pagina > 1 %}<a class="icon-button" href="{{ url_for('index', month=mes_selecionado, q=busca, tipo=tipo_filtro, page=pagina-1) }}#transacoes" aria-label="Página anterior">{{ icon('chevron-left') }}</a>{% endif %}<span aria-current="page">Página {{ pagina }} de {{ paginas }}</span>{% if pagina < paginas %}<a class="icon-button" href="{{ url_for('index', month=mes_selecionado, q=busca, tipo=tipo_filtro, page=pagina+1) }}#transacoes" aria-label="Próxima página">{{ icon('chevron-right') }}</a>{% endif %}</nav>{% else %}<span>{{ mes_label }}</span>{% endif %}</div>
+</section>
+<section id="objetivos" class="goals-section" aria-labelledby="goals-title">
+    <div class="section-heading"><div><span class="eyebrow">PLANOS QUE GANHAM FORMA</span><h2 id="goals-title">Seus próximos destinos</h2><p>Um pouco hoje. Uma conquista lá na frente.</p></div><button class="button button-secondary" type="button" data-dialog="goal-dialog">{{ icon('plus') }} Novo objetivo</button></div>
+    {% if lista_metas %}
+    <div class="goals-grid">{% for meta in lista_metas %}
+        <article class="goal-card"><div class="goal-top"><span class="goal-icon">{{ icon('check' if meta.concluida else 'target') }}</span><div class="row-actions"><button class="icon-button" type="button" data-dialog="goal-dialog" data-action="{{ url_for('editar_meta', meta_id=meta.id) }}" data-title="Editar objetivo" data-submit-label="Salvar alterações" data-edit="true" data-values='{{ {"nome_meta": meta.nome_meta, "valor_alvo": meta.valor_alvo|string, "valor_atual": meta.valor_atual|string, "data_limite": meta.data_limite|string} | tojson }}' aria-label="Editar objetivo {{ meta.nome_meta }}" title="Editar objetivo">{{ icon('edit') }}</button><button class="icon-button danger-hover" type="button" data-dialog="delete-dialog" data-action="{{ url_for('excluir_meta', meta_id=meta.id) }}" data-title="Excluir objetivo?" data-description='Excluir “{{ meta.nome_meta }}” e seu progresso? Esta ação não pode ser desfeita. Suas transações não serão alteradas.' aria-label="Excluir objetivo {{ meta.nome_meta }}" title="Excluir objetivo">{{ icon('trash') }}</button></div></div><h3>{{ meta.nome_meta }}</h3><p class="goal-deadline">{{ icon('calendar') }} {% if meta.concluida %}<span class="positive-text">Objetivo alcançado!</span>{% else %}Até {{ meta.data_limite | data_br }}{% if meta.data_limite|string < hoje %}<span class="overdue-badge">Prazo vencido</span>{% endif %}{% endif %}</p><div class="goal-values"><strong>R$ {{ meta.valor_atual | moeda }}</strong><span>de R$ {{ meta.valor_alvo | moeda }}</span></div><progress class="goal-progress" value="{{ meta.porcentagem }}" max="100" aria-label="Progresso de {{ meta.nome_meta }}">{{ meta.porcentagem }}%</progress><div class="goal-bottom"><span>{{ meta.porcentagem | round(0) | int }}% concluído</span>{% if not meta.concluida %}<button type="button" class="text-button" data-dialog="contribution-dialog" data-action="{{ url_for('adicionar_aporte', meta_id=meta.id) }}" data-description='Adicione um valor ao que você já guardou para “{{ meta.nome_meta }}”.'>{{ icon('plus') }} Guardar valor</button>{% else %}<span class="goal-complete">{{ icon('check') }} Concluído</span>{% endif %}</div></article>
+    {% endfor %}</div>
+    {% else %}<div class="goals-empty"><span class="empty-icon">{{ icon('target') }}</span><div><h3>Qual é o seu próximo destino?</h3><p>Uma viagem, sua reserva ou um novo projeto. Dê um nome ao que você quer conquistar.</p></div><button class="button button-secondary" type="button" data-dialog="goal-dialog">Criar meu primeiro objetivo {{ icon('arrow-right') }}</button></div>{% endif %}
+    <p class="goals-note">{{ icon('info') }} Os valores guardados acompanham seus objetivos e não alteram o saldo ou as transações.</p>
+</section>
 
-    <!-- Card de Saldo -->
-    <div class="col-md-4 mb-3">
-        <div class="card text-white bg-primary shadow rounded-0">
-            <div class="card-body">
-                <h5 class="card-title">Saldo Atual</h5>
-                <h3 class="card-text" id="saldo-atual">R$ {{ saldo_html | moeda }}</h3>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- FIM DA META #7 e #8 -->
+<dialog id="transaction-dialog" class="dialog" aria-labelledby="transaction-dialog-title"><div class="dialog-header"><div><span class="eyebrow">ORGANIZE SEU DIA A DIA</span><h2 id="transaction-dialog-title" data-dialog-title>Nova transação</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Fechar">{{ icon('close') }}</button></div><form action="{{ url_for('adicionar_transacao') }}" method="post" class="dialog-form">
+    {{ csrf_fields(mes_selecionado) }}
+    <div class="field"><label for="transaction-description">Descrição</label><input id="transaction-description" name="descricao" type="text" maxlength="160" placeholder="Ex.: salário, mercado, conta de luz" required autofocus></div>
+    <div class="field-row"><div class="field"><label for="transaction-value">Valor (R$)</label><input id="transaction-value" name="valor" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="0,00" required></div><div class="field"><label for="transaction-type">Tipo</label><select id="transaction-type" name="tipo" required><option value="despesa">Despesa</option><option value="receita">Receita</option></select></div></div>
+    <div class="field"><label for="transaction-date">Data da transação</label><input id="transaction-date" name="data_transacao" type="date" value="{{ hoje }}" max="{{ hoje }}" required></div>
+    <div class="dialog-footer"><button class="button button-secondary" type="button" data-close-dialog>Cancelar</button><button class="button button-primary" type="submit" data-dialog-submit>Salvar transação</button></div>
+</form></dialog>
 
-<div class="row mb-4">
-    <div class="col-md-8 mx-auto bg-white p-4 rounded shadow">
-        <h3 class="text-center mb-4">Fluxo de Caixa (Anual)</h3>
-        <canvas id="meuGrafico"></canvas>
-    </div>
-</div>
+<dialog id="goal-dialog" class="dialog" aria-labelledby="goal-dialog-title"><div class="dialog-header"><div><span class="eyebrow">DÊ DIREÇÃO AOS SEUS PLANOS</span><h2 id="goal-dialog-title" data-dialog-title>Novo objetivo</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Fechar">{{ icon('close') }}</button></div><form action="{{ url_for('adicionar_meta') }}" method="post" class="dialog-form">
+    {{ csrf_fields(mes_selecionado) }}
+    <div class="field"><label for="goal-name">O que você quer conquistar?</label><input id="goal-name" name="nome_meta" type="text" maxlength="120" placeholder="Ex.: minha reserva de emergência" required autofocus></div>
+    <div class="field-row"><div class="field"><label for="goal-target">Valor do objetivo (R$)</label><input id="goal-target" name="valor_alvo" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="0,00" required></div><div class="field"><label for="goal-current">Já guardado (R$)</label><input id="goal-current" name="valor_atual" type="number" value="0.00" min="0" max="9999999999.99" step="0.01" inputmode="decimal" required></div></div>
+    <div class="field"><label for="goal-date">Quando deseja alcançar?</label><input id="goal-date" name="data_limite" type="date" min="{{ hoje }}" data-create-min="{{ hoje }}" required></div>
+    <p class="form-note">{{ icon('info') }} Os valores guardados neste objetivo não alteram seu saldo.</p>
+    <div class="dialog-footer"><button class="button button-secondary" type="button" data-close-dialog>Cancelar</button><button class="button button-primary" type="submit" data-dialog-submit>Salvar objetivo</button></div>
+</form></dialog>
 
-<!-- INÍCIO DA META #10 (HTML): Gráfico Dinâmico -->
-<script>
-    const ctx = document.getElementById('meuGrafico');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            // Os 12 meses do ano
-            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
-            datasets: [
-                {
-                    label: 'Receitas (R$)',
-                    data: {{ receitas_grafico | tojson }},
-                    backgroundColor: '#198754' // Verde Bootstrap
-                },
-                {
-                    label: 'Despesas (R$)',
-                    data: {{ despesas_grafico | tojson }},
-                    backgroundColor: '#dc3545' // Vermelho Bootstrap
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-</script>
-<!-- FIM DA META #10 -->
+<dialog id="contribution-dialog" class="dialog dialog-compact" aria-labelledby="contribution-dialog-title" aria-describedby="contribution-description"><div class="dialog-header"><div><span class="eyebrow">MAIS PERTO DA SUA CONQUISTA</span><h2 id="contribution-dialog-title" data-dialog-title>Guardar um valor</h2></div><button type="button" class="icon-button" data-close-dialog aria-label="Fechar">{{ icon('close') }}</button></div><form method="post" class="dialog-form">
+    {{ csrf_fields(mes_selecionado) }}<p id="contribution-description" class="dialog-description" data-dialog-description>Adicione um valor ao que você já guardou para seu objetivo.</p><div class="field"><label for="contribution-value">Quanto você guardou agora? (R$)</label><input id="contribution-value" name="valor" type="number" min="0.01" max="9999999999.99" step="0.01" inputmode="decimal" placeholder="0,00" required autofocus></div><p class="form-note">{{ icon('info') }} Esse valor será somado ao progresso do objetivo. Seu saldo e suas transações não serão alterados.</p><div class="dialog-footer"><button class="button button-secondary" type="button" data-close-dialog>Cancelar</button><button class="button button-primary" type="submit" data-dialog-submit>Adicionar valor</button></div>
+</form></dialog>
 
-<div class="row mb-4">
-    <div class="col-md-8 mx-auto bg-white p-4 rounded shadow">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3>Últimas Transações</h3>
-            <div>
-                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalNovaTransacao">
-                    + Nova Transação
-                </button>
-                <button type="button" class="btn btn-warning ms-2" data-bs-toggle="modal" data-bs-target="#modalNovaMeta">
-                    + Nova Meta
-                </button>
-            </div>
-        </div>
-        
-        <table class="table table-striped table-hover">
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Descrição</th>
-                    <th>Tipo</th>
-                    <th>Valor (R$)</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for transacao in lista_para_html %}
-                <tr>
-                    <td>{{ transacao.data_transacao }}</td>
-                    <td>{{ transacao.descricao }}</td>
-                    <td>
-                        {% if transacao.tipo == 'receita' %}
-                            <span class="badge bg-success">Receita</span>
-                        {% else %}
-                            <span class="badge bg-danger">Despesa</span>
-                        {% endif %}
-                    </td>
-                    <td>R$ {{ transacao.valor }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="4" class="text-center text-muted">
-                        Nenhuma transação encontrada. Clique em "+ Nova Transação" para começar!
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<!-- INÍCIO DA META #9 (HTML): Seção de Objetivos Financeiros -->
-<div class="row mb-5">
-    <div class="col-md-8 mx-auto bg-white p-4 rounded shadow">
-        <h3 class="mb-4">Meus Objetivos Financeiros</h3>
-        
-        {% for meta in lista_metas %}
-        <div class="mb-4">
-            <div class="d-flex justify-content-between mb-1">
-                <strong>{{ meta.nome_meta }}</strong>
-                <span class="text-muted">R$ {{ meta.valor_atual | moeda }} / R$ {{ meta.valor_alvo | moeda }}</span>
-            </div>
-            <!-- A Barra de Progresso Animada do Bootstrap -->
-            <div class="progress" style="height: 25px;">
-                <div class="progress-bar bg-warning text-dark fw-bold progress-bar-striped progress-bar-animated" 
-                     role="progressbar" 
-                     style="width: {{ meta.porcentagem }}%;">
-                    {{ meta.porcentagem }}%
-                </div>
-            </div>
-            <small class="text-muted">Prazo: {{ meta.data_limite }}</small>
-        </div>
-        {% else %}
-        <p class="text-center text-muted">Nenhuma meta cadastrada. Defina seu primeiro objetivo!</p>
-        {% endfor %}
-    </div>
-</div>
-<!-- FIM DA META #9 -->
-
-<!-- Modal Nova Transacao -->
-<div class="modal fade" id="modalNovaTransacao" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cadastrar Transação</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            
-            <form action="/adicionar-transacao" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Descrição</label>
-                        <input type="text" class="form-control" name="descricao" placeholder="Ex: Conta de Luz" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Valor (R$)</label>
-                        <input type="number" class="form-control" name="valor" placeholder="0.00" step="0.01" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Tipo</label>
-                        <select class="form-select" name="tipo">
-                            <option value="receita">Receita</option>
-                            <option value="despesa">Despesa</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Transação</button>
-                </div>
-            </form> 
-        </div>
-    </div>
-</div>
-
-<!-- Modal Nova Meta -->
-<div class="modal fade" id="modalNovaMeta" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-warning">
-                <h5 class="modal-title">Cadastrar Nova Meta</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            
-            <form action="/adicionar-meta" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Qual é o seu objetivo?</label>
-                        <input type="text" class="form-control" name="nome_meta" placeholder="Ex: Reserva de Emergência, PC Novo..." required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Valor Alvo (R$)</label>
-                        <input type="number" class="form-control" name="valor_alvo" placeholder="Ex: 5000.00" step="0.01" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Data Limite</label>
-                        <input type="date" class="form-control" name="data_limite" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-dark">Salvar Meta</button>
-                </div>
-            </form> 
-        </div>
-    </div>
-</div>
+<dialog id="delete-dialog" class="dialog dialog-compact" aria-labelledby="delete-dialog-title" aria-describedby="delete-description"><div class="dialog-header"><h2 id="delete-dialog-title" data-dialog-title>Excluir registro?</h2><button type="button" class="icon-button" data-close-dialog aria-label="Fechar">{{ icon('close') }}</button></div><form method="post" class="dialog-form">
+    {{ csrf_fields(mes_selecionado) }}<p id="delete-description" class="dialog-description" data-dialog-description>Esta ação não pode ser desfeita.</p><div class="dialog-footer"><button class="button button-secondary" type="button" data-close-dialog autofocus>Cancelar</button><button class="button button-danger" type="submit">Sim, excluir</button></div>
+</form></dialog>
 {% endblock %}

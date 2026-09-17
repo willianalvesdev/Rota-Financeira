@@ -1,0 +1,40 @@
+{% macro icon(name, extra_class='') -%}
+<svg class="icon {{ extra_class }}" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+{%- if name == 'grid' %}<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
+{%- elif name == 'arrows' %}<path d="M4 7h15m-4-4 4 4-4 4M20 17H5m4-4-4 4 4 4"/>
+{%- elif name == 'target' %}<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>
+{%- elif name == 'sparkles' %}<path d="m12 3 2.7 6.3L21 12l-6.3 2.7L12 21l-2.7-6.3L3 12l6.3-2.7L12 3ZM20 2v4m-2-2h4"/>
+{%- elif name == 'logout' %}<path d="M9 4H5v16h4M12 12h9m-4-4 4 4-4 4"/>
+{%- elif name == 'moon' %}<path d="M20.9 13a9 9 0 1 1-9.9-9.9A7 7 0 0 0 20.9 13Z"/>
+{%- elif name == 'sun' %}<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/>
+{%- elif name == 'close' %}<path d="m6 6 12 12M6 18 18 6"/>
+{%- elif name == 'info' %}<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>
+{%- elif name == 'plus' %}<path d="M12 5v14M5 12h14"/>
+{%- elif name == 'wallet' %}<path d="M20 7H5a2 2 0 0 1 0-4h13v4M4 7v12a2 2 0 0 0 2 2h14V7M20 11h-5v5h5"/><path d="M17 13.5h.01"/>
+{%- elif name == 'arrow-up' %}<path d="M7 17 17 7M7 7h10v10"/>
+{%- elif name == 'arrow-down' %}<path d="M7 7 17 17M7 17h10V7"/>
+{%- elif name == 'arrow-right' %}<path d="M4 12h16m-6-6 6 6-6 6"/>
+{%- elif name == 'calendar' %}<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18M7 15h2m3 0h2m3 0h.01M7 18h2m3 0h2"/>
+{%- elif name == 'search' %}<circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>
+{%- elif name == 'edit' %}<path d="m15 4 5 5M4 20l5-1L21 7a2 2 0 0 0-5-5L4 14l-1 7Z"/>
+{%- elif name == 'trash' %}<path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/>
+{%- elif name == 'check' %}<path d="m5 12 4 4L19 6"/>
+{%- elif name == 'lock' %}<rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/>
+{%- elif name == 'eye' %}<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
+{%- elif name == 'chevron-left' %}<path d="m14 6-6 6 6 6"/>
+{%- elif name == 'chevron-right' %}<path d="m10 6 6 6-6 6"/>
+{%- endif %}
+</svg>
+{%- endmacro %}
+
+{% macro auth_visual() %}
+<aside class="auth-story" aria-label="Rota Financeira">
+    <a class="brand" href="{{ url_for('login') }}" aria-label="Rota Financeira, início"><img class="brand-logo" src="{{ url_for('static', filename='img/logo-black.svg') }}" width="36" height="36" alt=""><span>rota</span></a>
+    <div class="auth-story-content"><span class="eyebrow story-eyebrow">SEU DINHEIRO, SUA DIREÇÃO</span><h1>O próximo passo <br>começa com <br><span>mais clareza.</span></h1><p>Organize o presente. Planeje seus objetivos.<br>Construa a sua própria rota.</p>
+        <div class="route-illustration" aria-hidden="true"><svg viewBox="0 0 420 175" fill="none"><path class="route-grid" d="M0 40h420M0 90h420M0 140h420M60 0v175M160 0v175M260 0v175M360 0v175"/><path class="route-trail" d="M18 150h86V82h146V26h139"/><rect class="route-point" x="13" y="145" width="10" height="10"/><rect class="route-point" x="245" y="77" width="10" height="10"/><path class="route-destination" d="m397 10 4 12 12 4-12 4-4 12-4-12-12-4 12-4Z"/></svg><span class="route-start">Hoje</span><span class="route-end">Suas conquistas</span></div>
+    </div>
+    <p class="story-footer">Uma visão simples para decisões mais conscientes.</p>
+</aside>
+{% endmacro %}
+
+{% macro csrf_fields(month='') %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% if month %}<input type="hidden" name="mes_retorno" value="{{ month }}">{% endif %}{% endmacro %}

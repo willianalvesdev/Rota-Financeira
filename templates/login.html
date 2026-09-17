@@ -1,31 +1,21 @@
 {% extends 'base.html' %}
-
-{% block title %}Login - Rota Financeira{% endblock %}
-
+{% from 'macros.html' import auth_visual, csrf_fields %}
+{% block title %}Entrar · Rota Financeira{% endblock %}
 {% block content %}
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
-        <div class="card shadow">
-            <div class="card-header bg-dark text-white text-center">
-                <h4>Entrar no Sistema</h4>
-            </div>
-            <div class="card-body p-4">
-                <form action="/fazer-login" method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">E-mail</label>
-                        <input type="email" class="form-control" name="email" required placeholder="seu@email.com">
-                    </div>
-                    <div class="mb-4">
-                        <label class="form-label">Senha</label>
-                        <input type="password" class="form-control" name="senha" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">Entrar</button>
-                </form>
-                <div class="text-center mt-3">
-                    <p>Ainda não tem uma conta? <a href="/cadastro">Cadastre-se aqui</a></p>
-                </div>
-            </div>
+<div class="auth-layout">
+    {{ auth_visual() }}
+    <section class="auth-form-panel" aria-labelledby="auth-title">
+        <div class="auth-form-inner"><span class="eyebrow">BOM TER VOCÊ POR AQUI</span><h2 id="auth-title">Entre na sua rota.</h2><p class="auth-description">Seu dinheiro organizado, seus planos mais perto.</p>
+            {% if erro %}<p class="flash flash-error" role="alert">{{ erro }}</p>{% endif %}
+            <form action="{{ url_for('fazer_login') }}" method="post" class="form-stack">
+                {{ csrf_fields() }}
+                <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" value="{{ valores.get('email', '') }}" placeholder="voce@exemplo.com" autocomplete="email" maxlength="254" required autofocus></div>
+                <div class="field"><label for="senha">Senha</label><div class="password-field"><input id="senha" name="senha" type="password" placeholder="Digite sua senha" autocomplete="current-password" maxlength="128" required><button type="button" class="icon-button password-toggle" data-password-toggle="senha" aria-label="Mostrar senha" aria-pressed="false">{{ icon('eye') }}</button></div></div>
+                <button class="button button-primary button-full auth-submit" type="submit">Entrar na minha conta {{ icon('arrow-right') }}</button>
+            </form>
+            <p class="auth-switch">Ainda não tem uma conta? <a href="{{ url_for('cadastro') }}">Comece por aqui</a></p>
+            <p class="auth-footnote">{{ icon('lock') }} Um espaço só seu para cuidar das suas finanças.</p>
         </div>
-    </div>
+    </section>
 </div>
 {% endblock %}

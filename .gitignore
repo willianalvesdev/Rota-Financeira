@@ -1,3 +1,12 @@
 venv/
 __pycache__/
 .vscode/
+.venv/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+*.log
+artifacts/
