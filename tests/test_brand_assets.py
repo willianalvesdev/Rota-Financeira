@@ -8,7 +8,7 @@ from xml.etree import ElementTree
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-ALLOWED_COLORS = {"#0C0C0C", "#232323", "#49494B", "#B3B3B3", "#FFFFFF"}
+ALLOWED_COLORS = {"#0C0C0C", "#232323", "#49494B", "#B3B3B3", "#FFFFFF", "#4BD964", "#FF443A"}
 FONT_WEIGHTS = {"Regular": 400, "Medium": 500, "SemiBold": 600, "Bold": 700}
 
 
@@ -31,7 +31,7 @@ def templates():
     return {path: path.read_text(encoding="utf-8") for path in files}
 
 
-def test_css_uses_only_the_requested_palette_without_shadows_or_gradients():
+def test_css_uses_requested_palette_without_shadows_or_non_chart_gradients():
     colors_found = set()
     for path, css in stylesheets().items():
         colors = set(re.findall(r"#[0-9a-f]{3,8}\b", css, flags=re.IGNORECASE))
@@ -52,7 +52,7 @@ def test_css_uses_only_the_requested_palette_without_shadows_or_gradients():
             r"\b(?:repeating-)?(?:linear|radial|conic)-gradient\s*\(",
             css,
             re.IGNORECASE,
-        ), f"Shadows and gradients are not part of the requested identity: {path.name}."
+        ), f"Shadows are forbidden; gradients belong only to SVG charts, not {path.name}."
     assert colors_found, "The requested palette must be defined in the local CSS."
 
 
@@ -115,7 +115,7 @@ def test_templates_use_local_resources_without_bootstrap_or_chartjs():
 
 def test_supplied_logo_files_are_valid_svg_and_used_in_templates():
     source = "\n".join(templates().values())
-    for relative in ("img/logo-white.svg", "img/logo-black.svg", "favicon.svg"):
+    for relative in ("img/logo-symbol-white.svg", "img/logo-symbol-black.svg", "favicon.svg"):
         path = ROOT / "static" / relative
         assert path.is_file(), f"Missing supplied identity asset: {relative}"
         svg = ElementTree.parse(path).getroot()

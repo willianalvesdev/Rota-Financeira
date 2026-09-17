@@ -23,13 +23,17 @@
 {%- elif name == 'eye' %}<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>
 {%- elif name == 'chevron-left' %}<path d="m14 6-6 6 6 6"/>
 {%- elif name == 'chevron-right' %}<path d="m10 6 6 6-6 6"/>
+{%- elif name == 'chevron-down' %}<path d="m6 9 6 6 6-6"/>
+{%- elif name == 'panel' %}<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>
+{%- elif name == 'line-chart' %}<path d="M4 4v16h16M7 15l4-5 4 2 5-7"/>
+{%- elif name == 'bar-chart' %}<path d="M4 4v16h16M8 16v-5m5 5V7m5 9V4"/>
 {%- endif %}
 </svg>
 {%- endmacro %}
 
 {% macro auth_visual() %}
 <aside class="auth-story" aria-label="Rota Financeira">
-    <a class="brand" href="{{ url_for('login') }}" aria-label="Rota Financeira, início"><img class="brand-logo" src="{{ url_for('static', filename='img/logo-black.svg') }}" width="36" height="36" alt=""><span>rota</span></a>
+    <a class="brand" href="{{ url_for('login') }}" aria-label="Rota Financeira, início"><img class="brand-logo" src="{{ url_for('static', filename='img/logo-symbol-white.svg') }}" width="36" height="36" alt=""><span>rota</span></a>
     <div class="auth-story-content"><span class="eyebrow story-eyebrow">SEU DINHEIRO, SUA DIREÇÃO</span><h1>O próximo passo <br>começa com <br><span>mais clareza.</span></h1><p>Organize o presente. Planeje seus objetivos.<br>Construa a sua própria rota.</p>
         <div class="route-illustration" aria-hidden="true"><svg viewBox="0 0 420 175" fill="none"><path class="route-grid" d="M0 40h420M0 90h420M0 140h420M60 0v175M160 0v175M260 0v175M360 0v175"/><path class="route-trail" d="M18 150h86V82h146V26h139"/><rect class="route-point" x="13" y="145" width="10" height="10"/><rect class="route-point" x="245" y="77" width="10" height="10"/><path class="route-destination" d="m397 10 4 12 12 4-12 4-4 12-4-12-12-4 12-4Z"/></svg><span class="route-start">Hoje</span><span class="route-end">Suas conquistas</span></div>
     </div>
@@ -38,3 +42,8 @@
 {% endmacro %}
 
 {% macro csrf_fields(month='') %}<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">{% if month %}<input type="hidden" name="mes_retorno" value="{{ month }}">{% endif %}{% endmacro %}
+
+{% macro money(value, currency=true) -%}
+{% set parts = (value | moeda).rsplit(',', 1) -%}
+{% if currency %}<span class="money-symbol">R$ </span>{% endif %}<span class="money-whole">{{ parts[0] }}</span>{% if parts | length > 1 %}<span class="money-cents">,{{ parts[1] }}</span>{% endif %}
+{%- endmacro %}

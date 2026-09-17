@@ -91,11 +91,13 @@ def client(app):
 
 @pytest.fixture
 def make_user(db_connection):
-    def create(email="ana@example.com", name="Ana Teste", password="senha-segura-123"):
+    def create(
+        email="ana@example.com", name="Ana Teste", password="senha-segura-123", reserve_initialized=True
+    ):
         with db_connection.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO usuarios (nome, email, senha) VALUES (%s, %s, %s)",
-                (name, email, generate_password_hash(password)),
+                "INSERT INTO usuarios (nome, email, senha, reserva_inicializada) VALUES (%s, %s, %s, %s)",
+                (name, email, generate_password_hash(password), reserve_initialized),
             )
             return cursor.lastrowid
 

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Contato · Rota Financeira{% endblock %}
+{% block content %}
+<article class="legal-page panel" aria-labelledby="contact-title"><span class="eyebrow">VAMOS CONVERSAR</span><h1 id="contact-title">Contato</h1>
+{% if contato_email %}<p>Fale com a equipe: <a href="mailto:{{ contato_email }}">{{ contato_email }}</a>.</p>{% else %}<p>Nosso canal público de contato estará disponível aqui em breve.</p>{% endif %}
+<h2 id="redes">Redes sociais</h2>
+{% if redes_sociais %}<ul>{% for rede in redes_sociais %}<li><a href="{{ rede.url }}" target="_blank" rel="noopener noreferrer">{{ rede.nome }}</a></li>{% endfor %}</ul>{% else %}<p>Os perfis oficiais serão divulgados neste espaço.</p>{% endif %}
+<p><a class="button button-secondary" href="{{ url_for('index') if session.get('usuario_id') else url_for('login') }}">Voltar ao início</a></p></article>
+{% endblock %}

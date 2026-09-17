@@ -9,6 +9,8 @@ import mysql.connector
 from flask import current_app, g
 from flask.cli import with_appcontext
 
+from .defaults import ensure_initial_goal
+
 
 def connection_options(config, *, include_database=True):
     options = dict(
@@ -66,6 +68,28 @@ def initialize_database(config):
             for statement in schema.split(";"):
                 if statement.strip():
                     current.execute(statement)
+            # Migração aditiva para instalações anteriores. Nenhum registro é apagado.
+            current.execute(
+                """SELECT COLUMN_NAME FROM information_schema.COLUMNS
+                WHERE TABLE_SCHEMA=%s AND TABLE_NAME='usuarios' AND COLUMN_NAME='reserva_inicializada'""",
+                (name,),
+            )
+            if current.fetchone() is None:
+                current.execute(
+                    "ALTER TABLE usuarios ADD COLUMN reserva_inicializada BOOLEAN NOT NULL DEFAULT FALSE"
+                )
+            current.execute(
+                """SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=%s
+                AND TABLE_NAME='metas' AND COLUMN_NAME IN ('valor_alvo','data_limite') AND IS_NULLABLE='NO'""",
+                (name,),
+            )
+            if current.fetchone()[0]:
+                current.execute(
+                    "ALTER TABLE metas MODIFY valor_alvo DECIMAL(12,2) NULL, MODIFY data_limite DATE NULL"
+                )
+            current.execute("SELECT id FROM usuarios WHERE reserva_inicializada=0")
+            for (user_id,) in current.fetchall():
+                ensure_initial_goal(current, user_id)
         connection.commit()
     finally:
         connection.close()

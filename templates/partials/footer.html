@@ -1,0 +1,9 @@
+<footer class="site-footer {% if not session.get('usuario_id') %}public-footer{% endif %}">
+    <nav class="footer-links" aria-label="Informações e preferências">
+        <a href="{{ url_for('privacidade') }}">Privacidade</a>
+        <a href="{{ url_for('contato') }}">Contato</a>
+        {% if redes_sociais %}{% for rede in redes_sociais %}<a href="{{ rede.url }}" target="_blank" rel="noopener noreferrer">{{ rede.nome }}</a>{% endfor %}{% else %}<a href="{{ url_for('contato') }}#redes">Redes sociais</a>{% endif %}
+        <button type="button" class="footer-link-button" data-dialog="cookie-dialog">Preferências de cookies</button>
+    </nav>
+    <div class="footer-meta"><span>© {{ ano_atual }} Rota Financeira. Todos os direitos reservados.</span></div>
+</footer>

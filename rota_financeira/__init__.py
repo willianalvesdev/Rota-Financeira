@@ -5,7 +5,7 @@ from datetime import timedelta
 from pathlib import Path
 
 from dotenv import load_dotenv
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFError, CSRFProtect
@@ -55,9 +55,11 @@ def create_app(test_config=None):
     app.jinja_env.filters["moeda"] = format_currency
     app.jinja_env.filters["data_br"] = format_date
 
+    from .public import register_public_routes
     from .views import register_routes
 
     register_routes(app, limiter)
+    register_public_routes(app)
 
     @app.after_request
     def security_headers(response):
@@ -72,6 +74,8 @@ def create_app(test_config=None):
         )
         if response.mimetype == "text/html":
             response.headers["Cache-Control"] = "no-store"
+            if request.endpoint not in {"privacidade", "contato"}:
+                response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
         if app.config["SESSION_COOKIE_SECURE"]:
             response.headers["Strict-Transport-Security"] = "max-age=31536000"
         return response

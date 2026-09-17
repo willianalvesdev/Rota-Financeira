@@ -1,0 +1,18 @@
+# Rota Financeira
+
+> Aplicação de finanças pessoais em português do Brasil. Dados financeiros e perfis são privados e exigem autenticação.
+
+## Páginas públicas
+
+- [Política de privacidade](/privacidade): dados tratados, armazenamento local e preferências de cookies.
+- [Contato](/contato): canais oficiais, quando disponibilizados pelo responsável pelo projeto.
+
+## Recursos
+
+Contas individuais, receitas, despesas, saldo acumulado, comparações anuais e objetivos de economia. A reserva de emergência inicial não define um valor recomendado: cada pessoa configura seu próprio objetivo.
+
+O aplicativo registra dados informados pelo usuário. Não movimenta dinheiro, não conecta contas bancárias e não oferece cotações de mercado.
+
+## Privacidade
+
+Painéis, sessões, transações e metas não são conteúdo público nem autorizado para indexação. robots.txt não substitui autenticação. Esta documentação não contém dados de usuários.

@@ -1,6 +1,6 @@
-{% from 'macros.html' import icon %}
+{% from 'macros.html' import icon, csrf_fields %}
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR" data-theme="dark" data-sidebar-collapsed="false">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,36 +8,34 @@
     <meta name="description" content="Organize suas finanças, acompanhe seus gastos e dê o próximo passo em direção aos seus objetivos.">
     <title>{% block title %}Rota Financeira{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+    <link rel="manifest" href="{{ url_for('manifest') }}">
+    <meta name="theme-color" content="#0C0C0C">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/app-icon.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Rota">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </head>
 <body class="{% if session.get('usuario_id') %}app-layout{% else %}public-layout{% endif %}">
     <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
     {% if session.get('usuario_id') %}
-    <aside class="sidebar" aria-label="Menu principal">
-        <a class="brand" href="{{ url_for('index') }}" aria-label="Rota Financeira, início">
-            <img class="brand-logo" src="{{ url_for('static', filename='img/logo-black.svg') }}" width="36" height="36" alt="">
-            <span>rota</span>
-        </a>
-        <div class="sidebar-label">SEU ESPAÇO</div>
+    <aside class="sidebar" id="menu-principal" aria-label="Menu principal">
+        <div class="sidebar-heading"><a class="brand" href="{{ url_for('index') }}" aria-label="Rota Financeira, início" title="Rota Financeira">
+            <img class="brand-logo brand-logo-light" src="{{ url_for('static', filename='img/logo-symbol-black.svg') }}" width="36" height="36" alt="">
+            <img class="brand-logo brand-logo-dark" src="{{ url_for('static', filename='img/logo-symbol-white.svg') }}" width="36" height="36" alt="">
+            <span class="brand-wordmark">rota</span>
+        </a><button class="icon-button sidebar-toggle" type="button" data-sidebar-toggle aria-label="Recolher menu" aria-expanded="true" aria-controls="menu-principal" title="Recolher menu">{{ icon('panel') }}</button><button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Ativar tema claro" title="Alternar tema">{{ icon('moon', 'theme-moon') }}{{ icon('sun', 'theme-sun') }}</button></div>
         <nav class="sidebar-nav" aria-label="Navegação">
-            <a class="nav-link is-active" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#visao-geral">{{ icon('grid') }}<span>Visão geral</span></a>
-            <a class="nav-link" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#transacoes">{{ icon('arrows') }}<span>Transações</span></a>
-            <a class="nav-link" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#objetivos">{{ icon('target') }}<span>Meus objetivos</span></a>
+            <a class="nav-link is-active" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#visao-geral" title="Visão geral" aria-label="Visão geral">{{ icon('grid') }}<span>Visão geral</span></a>
+            <a class="nav-link" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#transacoes" title="Transações" aria-label="Transações">{{ icon('arrows') }}<span>Transações</span></a>
+            <a class="nav-link" href="{{ '' if request.endpoint == 'index' else url_for('index') }}#objetivos" title="Meus objetivos" aria-label="Meus objetivos">{{ icon('target') }}<span>Meus objetivos</span></a>
         </nav>
-        <div class="sidebar-bottom">
-            <div class="sidebar-note"><span class="note-icon">{{ icon('sparkles') }}</span><strong>Um passo de cada vez.</strong><p>Pequenas escolhas hoje.<br>Mais possibilidades amanhã.</p></div>
-            <div class="user-profile">
-                <span class="avatar" aria-hidden="true">{{ session.get('usuario_nome', 'U')[:1] | upper }}</span>
-                <div class="user-name"><strong>{{ session.get('usuario_nome', 'Minha conta') }}</strong><span>Minha conta pessoal</span></div>
-                <form action="{{ url_for('logout') }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="icon-button logout-button" type="submit" aria-label="Sair da conta" title="Sair da conta">{{ icon('logout') }}</button></form>
-            </div>
-        </div>
+        <div class="sidebar-bottom"><button class="profile-button" type="button" data-dialog="logout-dialog" aria-label="Conta de {{ session.get('usuario_nome', 'usuário') }} e opção de sair" title="Minha conta e sair"><img class="avatar-image" src="{{ url_for('static', filename='img/avatar.svg') }}" width="38" height="38" alt=""><span class="user-name"><strong>{{ session.get('usuario_nome', 'Minha conta') }}</strong><span>Minha conta</span></span></button></div>
     </aside>
     <div class="app-main">
-        <header class="topbar"><div class="topbar-location">Meu painel <span>/</span> <strong>Finanças pessoais</strong></div><button class="icon-button theme-toggle" type="button" data-theme-toggle aria-label="Ativar tema escuro" title="Alternar tema">{{ icon('moon', 'theme-moon') }}{{ icon('sun', 'theme-sun') }}</button></header>
     {% else %}
-    <button class="icon-button theme-toggle public-theme-toggle" type="button" data-theme-toggle aria-label="Ativar tema escuro" title="Alternar tema">{{ icon('moon', 'theme-moon') }}{{ icon('sun', 'theme-sun') }}</button>
+    <button class="icon-button theme-toggle public-theme-toggle" type="button" data-theme-toggle aria-label="Ativar tema claro" title="Alternar tema">{{ icon('moon', 'theme-moon') }}{{ icon('sun', 'theme-sun') }}</button>
     {% endif %}
     <main id="conteudo" class="{% if session.get('usuario_id') %}page-content{% else %}public-content{% endif %}" tabindex="-1">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -45,9 +43,23 @@
         {% endwith %}
         {% block content %}{% endblock %}
     </main>
+    {% include 'partials/footer.html' %}
+    {% if session.get('usuario_id') %}</div>{% endif %}
+
+    <dialog id="cookie-dialog" class="dialog cookie-dialog" aria-labelledby="cookie-dialog-title" aria-describedby="cookie-dialog-description">
+        <div class="dialog-header"><div><span class="eyebrow">PRIVACIDADE DO SEU JEITO</span><h2 id="cookie-dialog-title">Suas preferências</h2></div><button class="icon-button" type="button" data-close-dialog aria-label="Fechar preferências">{{ icon('close') }}</button></div>
+        <div class="cookie-content"><p id="cookie-dialog-description">Usamos cookies essenciais para manter sua sessão e proteger suas ações. Você decide se quer que a Rota lembre suas preferências de aparência.</p>
+            <div class="cookie-category"><div><strong>Essenciais</strong><p>Sessão da conta e proteção dos formulários. Necessários para o funcionamento.</p></div><span class="cookie-status">Sempre ativos</span></div>
+            <div class="cookie-category"><div><strong>Preferências de aparência</strong><p>Lembrar tema, formato do gráfico e menu recolhido neste navegador.</p></div><span class="cookie-status" data-cookie-status>Opcionais</span></div>
+            <p class="cookie-note">Não utilizamos publicidade nem ferramentas de análise de visitas. Sua escolha é lembrada por seis meses e pode ser alterada no rodapé. <a href="{{ url_for('privacidade') }}">Ler a política de privacidade</a>.</p>
+            <div class="cookie-actions"><button class="button button-secondary" type="button" data-cookie-choice="false">Somente essenciais</button><button class="button button-secondary" type="button" data-cookie-choice="true">Permitir preferências</button></div>
+        </div>
+    </dialog>
     {% if session.get('usuario_id') %}
-        <footer class="app-footer"><span>rota</span><span>Mais clareza para o seu próximo passo.</span></footer>
-    </div>
+    <dialog id="logout-dialog" class="dialog dialog-compact logout-dialog" aria-labelledby="logout-dialog-title" aria-describedby="logout-description">
+        <div class="dialog-header"><span></span><button type="button" class="icon-button" data-close-dialog aria-label="Cancelar saída">{{ icon('close') }}</button></div>
+        <form action="{{ url_for('logout') }}" method="post" class="dialog-form">{{ csrf_fields() }}<div class="logout-profile"><img src="{{ url_for('static', filename='img/avatar.svg') }}" width="76" height="76" alt="Avatar padrão"><strong>{{ session.get('usuario_nome', 'Minha conta') }}</strong></div><h2 id="logout-dialog-title">Tem certeza que deseja sair?</h2><p id="logout-description" class="dialog-description">Sua sessão será encerrada neste navegador. Seus registros continuam guardados na sua conta.</p><div class="dialog-footer"><button class="button button-secondary" type="button" data-close-dialog autofocus>Cancelar</button><button class="button button-primary" type="submit">Sim, sair {{ icon('logout') }}</button></div></form>
+    </dialog>
     {% endif %}
 </body>
 </html>

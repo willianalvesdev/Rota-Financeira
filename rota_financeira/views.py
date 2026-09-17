@@ -1,5 +1,6 @@
 """Rotas de autenticação e operações financeiras sempre limitadas ao usuário."""
 
+from calendar import monthrange
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from functools import wraps
@@ -11,6 +12,7 @@ from mysql.connector import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from .db import cursor
+from .defaults import ensure_initial_goal
 from .validation import MAX_MONEY, MONTHS, date_field, email_field, money_field, month_range, text_field
 
 
@@ -110,6 +112,7 @@ def register_routes(app, limiter):
                     "INSERT INTO usuarios (nome, email, senha) VALUES (%s, %s, %s)",
                     (name, email, password_hash),
                 )
+                ensure_initial_goal(current, current.lastrowid)
         except ValueError as error:
             flash(str(error), "error")
             return render_template("cadastro.html", valores=values), 422
@@ -143,6 +146,7 @@ def register_routes(app, limiter):
         token = token_urlsafe(32)
         expires = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=8)
         with cursor(write=True) as current:
+            ensure_initial_goal(current, user["id"])
             current.execute(
                 "DELETE FROM sessoes WHERE usuario_id=%s AND expira_em <= UTC_TIMESTAMP()", (user["id"],)
             )
@@ -183,6 +187,13 @@ def register_routes(app, limiter):
             kind = ""
         page = max(1, request.args.get("page", 1, type=int) or 1)
         user_id = session["usuario_id"]
+        today = date.today()
+        cutoff = end - timedelta(days=1)
+        if start.year == today.year:
+            cutoff = min(cutoff, today)
+        previous_cutoff = date(
+            start.year - 1, cutoff.month, min(cutoff.day, monthrange(start.year - 1, cutoff.month)[1])
+        )
         conditions = "usuario_id = %s AND data_transacao >= %s AND data_transacao < %s"
         parameters = [user_id, start, end]
         if search:
@@ -226,14 +237,47 @@ def register_routes(app, limiter):
                 (user_id, date(start.year, 1, 1), date(start.year + 1, 1, 1)),
             )
             chart_rows = current.fetchall()
+            current.execute(
+                """SELECT COALESCE(SUM(CASE WHEN tipo='receita' THEN valor ELSE -valor END),0) AS saldo,
+                COALESCE(SUM(CASE WHEN data_transacao <= %s THEN
+                CASE WHEN tipo='receita' THEN valor ELSE -valor END ELSE 0 END),0) AS periodo,
+                COUNT(CASE WHEN data_transacao <= %s THEN 1 END) AS quantidade
+                FROM transacoes WHERE usuario_id=%s AND data_transacao >= %s AND data_transacao < %s""",
+                (
+                    previous_cutoff,
+                    previous_cutoff,
+                    user_id,
+                    date(start.year - 1, 1, 1),
+                    date(start.year, 1, 1),
+                ),
+            )
+            previous = current.fetchone()
+            current.execute(
+                """SELECT COALESCE(SUM(CASE WHEN tipo='receita' THEN valor ELSE -valor END),0) AS saldo
+                FROM transacoes WHERE usuario_id=%s AND data_transacao >= %s AND data_transacao <= %s""",
+                (user_id, date(start.year, 1, 1), cutoff),
+            )
+            comparison_current = current.fetchone()["saldo"]
         for goal in goals:
-            percentage = goal["valor_atual"] / goal["valor_alvo"] * 100
+            goal["precisa_configurar"] = goal["valor_alvo"] is None or goal["data_limite"] is None
+            percentage = (
+                goal["valor_atual"] / goal["valor_alvo"] * 100 if goal["valor_alvo"] else Decimal("0")
+            )
             goal["porcentagem"] = float(min(Decimal("100"), percentage).quantize(Decimal("0.1")))
-            goal["concluida"] = goal["valor_atual"] >= goal["valor_alvo"]
+            goal["concluida"] = bool(goal["valor_alvo"] and goal["valor_atual"] >= goal["valor_alvo"])
         revenues, expenses = [0.0] * 12, [0.0] * 12
+        monthly_balances = [Decimal("0.00") for _ in range(12)]
         for row in chart_rows:
             values = revenues if row["tipo"] == "receita" else expenses
             values[row["mes"] - 1] = float(row["total"])
+            monthly_balances[row["mes"] - 1] += row["total"] if row["tipo"] == "receita" else -row["total"]
+        comparison_available = start.year <= today.year
+        difference = comparison_current - previous["periodo"] if comparison_available else Decimal("0")
+        percentage_change = (
+            (difference / abs(previous["periodo"]) * 100).quantize(Decimal("0.1"))
+            if previous["periodo"] and comparison_available
+            else None
+        )
         return render_template(
             "index.html",
             lista_para_html=transactions,
@@ -246,12 +290,25 @@ def register_routes(app, limiter):
             mes_selecionado=selected,
             mes_label=f"{MONTHS[start.month - 1]} de {start.year}",
             ano_selecionado=start.year,
+            ano_em_andamento=start.year == today.year,
             hoje=date.today().isoformat(),
             busca=search,
             tipo_filtro=kind,
             pagina=page,
             paginas=pages,
             total_transacoes=count,
+            saldos_mensais=monthly_balances,
+            saldo_anual=sum(monthly_balances, Decimal("0.00")),
+            saldo_ano_anterior=previous["saldo"],
+            comparacao_atual=comparison_current,
+            comparacao_anterior=previous["periodo"],
+            comparacao_disponivel=comparison_available,
+            variacao_anual=difference,
+            percentual_anual=percentage_change,
+            tem_dados_ano_anterior=previous["quantidade"] > 0,
+            comparacao_label=f"Acumulado até {cutoff:%d/%m/%Y} · mesmo período de {start.year - 1}"
+            if comparison_available
+            else "Período futuro — comparação indisponível",
         )
 
     @app.post("/adicionar-transacao")
@@ -341,6 +398,8 @@ def register_routes(app, limiter):
         with cursor(write=True) as current:
             goal = owned_row(current, "metas", meta_id)
             try:
+                if goal["valor_alvo"] is None or goal["data_limite"] is None:
+                    raise ValueError("Defina o valor e o prazo da sua reserva antes de registrar um aporte.")
                 amount = money_field(request.form.get("valor"))
                 if goal["valor_atual"] + amount > MAX_MONEY:
                     raise ValueError("Este aporte ultrapassa o valor máximo permitido para a meta.")

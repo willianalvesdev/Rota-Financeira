@@ -2,7 +2,7 @@
 
 Aplicação de finanças pessoais em português, com Flask e MySQL. Inclui contas individuais, receitas e despesas, resumo mensal, saldo acumulado, gráfico anual e metas com aportes. Interface responsiva com temas claro e escuro, CSS próprio e recursos locais: não depende de Bootstrap, Chart.js ou CDNs.
 
-Identidade visual: logos e favicon fornecidos, tipografia Poppins e paleta exclusiva `#0C0C0C`, `#232323`, `#49494B`, `#B3B3B3`, `#FFFFFF`. Não utiliza sombras ou gradientes. Receitas e despesas são distinguidas por rótulos, sinais e ícones; o gráfico usa preenchimento e contorno.
+Identidade visual: logos e favicon fornecidos, Poppins local e paleta base `#0C0C0C`, `#232323`, `#49494B`, `#B3B3B3`, `#FFFFFF`. Receitas e aumentos usam `#4BD964`; despesas e perdas usam `#FF443A`, acompanhados de rótulos, sinais e ícones. Não utiliza sombras. O único gradiente fica no preenchimento do gráfico de linhas, que também pode ser exibido em barras. O tema inicial é escuro.
 
 ## Executar neste computador
 
@@ -34,7 +34,7 @@ Prepare o banco e o usuário da aplicação:
 .\venv\Scripts\python.exe run.py
 ```
 
-O configurador pede a senha administrativa do MySQL, cria apenas estruturas ausentes e concede `SELECT`, `INSERT`, `UPDATE` e `DELETE` ao usuário da aplicação, somente neste banco. Não apaga registros e não muda a senha de uma conta MySQL já existente. Se essa conta já existir, o `.env` deve usar sua senha correta. O configurador é destinado a uma instalação local nova; `CREATE TABLE IF NOT EXISTS` não altera schemas antigos. Antes de aplicar mudanças a um banco existente em outra instalação, faça backup e revise sua estrutura.
+O configurador pede a senha administrativa do MySQL, cria estruturas ausentes e concede `SELECT`, `INSERT`, `UPDATE` e `DELETE` ao usuário da aplicação, somente neste banco. Não apaga registros e não muda a senha de uma conta MySQL já existente. Se essa conta já existir, o `.env` deve usar sua senha correta. A migração desta versão acrescenta o marcador de reserva inicial e permite valor e prazo vazios somente na reserva ainda não configurada. Antes de aplicar mudanças a um banco existente em outra instalação, faça backup e revise sua estrutura.
 
 O arquivo `setup_banco_sq.sql` também pode ser aberto no MySQL Workbench para criar o banco e as tabelas. Ele não cria o usuário da aplicação. Para apenas verificar/criar as tabelas pela aplicação:
 
@@ -46,6 +46,8 @@ O arquivo `setup_banco_sq.sql` também pode ser aberto no MySQL Workbench para c
 
 - Receitas e despesas do resumo pertencem ao **mês selecionado**. O saldo acumulado considera todo o histórico do usuário.
 - O gráfico compara os 12 meses do **ano selecionado**. Filtros por descrição/tipo e paginação afetam a lista, sem alterar os totais do período.
+- A comparação anual usa o acumulado até o fim do mês selecionado, limitado a hoje no ano corrente, contra o mesmo período do ano anterior. Em anos bissextos, o corte anterior é ajustado para a última data válida. Quando a base é zero, não se inventa uma porcentagem.
+- Cada conta recebe uma única **Reserva de emergência**, sem valor ou prazo inventados. Configure-a antes de adicionar aportes. Se você a excluir, ela não reaparece automaticamente. A migração também atende contas anteriores sem duplicar uma reserva com esse nome.
 - Valores usam `Decimal` no Python e `DECIMAL(12,2)` no banco. Entradas aceitam até duas casas decimais; transações e aportes precisam ser positivos. O máximo por valor é R$ 9.999.999.999,99.
 - As transações são realizadas: sua data não pode estar no futuro. Novas metas precisam ter prazo a partir de hoje. Metas existentes podem manter um prazo vencido.
 - Aportes aumentam somente o valor guardado na meta. **Não movimentam dinheiro nem alteram transações ou saldo.** Uma meta pode ultrapassar o alvo; o indicador visual para em 100%.
@@ -60,6 +62,8 @@ run.py                      Entrada do servidor Waitress
 rota_financeira/
   __init__.py               Configuração, segurança e erros
   db.py                     Conexões e inicialização do MySQL
+  defaults.py               Reserva inicial idempotente
+  public.py                 Privacidade, contato e metadados públicos
   views.py                  Autenticação, painel e operações
   validation.py             Valores, datas e formatação
 templates/                  Páginas e componentes Jinja
@@ -70,7 +74,17 @@ setup_banco_sq.sql          Schema completo
 tests/                      Testes de integração com MySQL isolado
 ```
 
-Personalize os tokens de cores, fontes, espaçamentos e raios no `:root` de `static/css/style.css`. As substituições do tema escuro ficam em `[data-theme="dark"]`. O botão de tema salva a preferência neste navegador. Os gráficos também têm uma tabela acessível com os valores mensais. A fonte Poppins está em `static/fonts`, com sua licença SIL Open Font License em `OFL.txt`, obtida do repositório oficial [Google Fonts](https://github.com/google/fonts/tree/main/ofl/poppins). As logos estão em `static/img`.
+Personalize os tokens de cores, fontes, espaçamentos e raios no `:root` de `static/css/style.css`. As substituições do tema escuro ficam em `[data-theme="dark"]`. Os cantos usam `corner-shape: squircle` nos navegadores compatíveis, com arredondamento convencional como fallback. Os gráficos também têm uma tabela acessível com os valores mensais. A fonte Poppins está em `static/fonts`, com sua licença SIL Open Font License em `OFL.txt`, obtida do repositório oficial [Google Fonts](https://github.com/google/fonts/tree/main/ofl/poppins). As logos estão em `static/img`.
+
+## Preferências, páginas públicas e ícone
+
+O diálogo de cookies permite escolher somente os essenciais ou autorizar preferências. Tema, menu recolhido e formato do gráfico só são salvos quando permitidos. A decisão fica no armazenamento local por seis meses e pode ser alterada pelo rodapé. Não há publicidade nem ferramentas externas de análise de visitas.
+
+O rodapé aponta para `/privacidade` e `/contato`. Os canais de contato e redes sociais ficam explicitamente pendentes até o responsável informar os links reais; o contexto aceita as configurações `CONTACT_EMAIL` e `SOCIAL_LINKS` (lista de objetos com `nome` e `url`). Revise a política para refletir o operador e a hospedagem usados antes de publicar.
+
+O manifest e o ícone Apple permitem usar a identidade visual quando alguém adiciona o site à tela inicial pelo próprio navegador. Não há convites de instalação, página de instalação, service worker nem modo offline. Para acessar pelo celular, o site precisa de um endereço alcançável nesse aparelho; `127.0.0.1` refere-se ao próprio dispositivo. Use HTTPS na hospedagem.
+
+`robots.txt` desencoraja o acesso de robôs às áreas privadas; `llms.txt` descreve apenas recursos públicos. Ambos são orientações para robôs, não controles de segurança: a proteção dos dados depende da autenticação e das verificações de propriedade no servidor.
 
 ## Verificação
 

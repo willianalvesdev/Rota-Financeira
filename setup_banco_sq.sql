@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nome VARCHAR(100) NOT NULL,
     email VARCHAR(254) NOT NULL,
     senha VARCHAR(255) NOT NULL,
+    reserva_inicializada BOOLEAN NOT NULL DEFAULT FALSE,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uq_usuarios_email UNIQUE (email)
 ) ENGINE=InnoDB;
@@ -37,9 +38,9 @@ CREATE TABLE IF NOT EXISTS metas (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT UNSIGNED NOT NULL,
     nome_meta VARCHAR(120) NOT NULL,
-    valor_alvo DECIMAL(12, 2) NOT NULL,
+    valor_alvo DECIMAL(12, 2) NULL,
     valor_atual DECIMAL(12, 2) NOT NULL DEFAULT 0.00,
-    data_limite DATE NOT NULL,
+    data_limite DATE NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_metas_usuario FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE,
     CONSTRAINT chk_metas_alvo CHECK (valor_alvo > 0),

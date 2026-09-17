@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Política de privacidade · Rota Financeira{% endblock %}
+{% block content %}
+<article class="legal-page panel" aria-labelledby="privacy-title">
+    <span class="eyebrow">TRANSPARÊNCIA</span><h1 id="privacy-title">Política de privacidade</h1>
+    <p>Atualizada em 17 de setembro de 2026.</p>
+    <h2>Seus dados, no seu espaço</h2>
+    <p>A Rota Financeira usa seu nome e e-mail para identificar sua conta e os dados que você informa para organizar transações e objetivos. A senha é armazenada como um hash, não em texto legível. O aplicativo não conecta contas bancárias e não realiza pagamentos ou transferências.</p>
+    <h2>Armazenamento e acesso</h2>
+    <p>As informações ficam no banco de dados da instalação que você utiliza. Apenas a sua conta pode acessar seus registros pelas funções do aplicativo. O administrador da instalação é responsável pela operação do servidor, pelos backups e pelo atendimento às solicitações sobre dados. Registros são mantidos enquanto existirem nessa instalação; transações e metas podem ser excluídas no seu painel.</p>
+    <h2>Cookies essenciais</h2>
+    <p>O cookie de sessão mantém seu acesso e ajuda a proteger os formulários contra envios indevidos. Ele é necessário para o funcionamento da conta. A sessão expira em oito horas; ao sair, ela é invalidada no servidor. A escolha sobre cookies também é guardada neste navegador para que não seja necessário responder a cada visita.</p>
+    <h2>Preferências opcionais</h2>
+    <p>Com sua permissão, o navegador lembra o tema, o estado do menu lateral e o tipo de gráfico. Essas preferências usam armazenamento local e não são enviadas a serviços de publicidade. Você pode permitir apenas os itens essenciais e continuar usando o aplicativo. Revise ou retire a permissão em “Preferências de cookies”, no rodapé. A escolha é solicitada novamente após seis meses.</p>
+    <h2>Sem rastreamento publicitário</h2>
+    <p>Esta versão não inclui ferramentas de publicidade ou análise de navegação de terceiros. Fontes, ícones e scripts são servidos pelo próprio aplicativo. Páginas autenticadas são enviadas com orientação para não serem armazenadas em cache pelo navegador.</p>
+    <h2>Contato e solicitações</h2>
+    <p>Para solicitar informações, correções ou a remoção da conta e dos dados associados, procure o responsável pela instalação que você utiliza. Os canais públicos do projeto serão disponibilizados na <a href="{{ url_for('contato') }}">página de contato</a>.</p>
+    <p><a class="button button-secondary" href="{{ url_for('index') if session.get('usuario_id') else url_for('login') }}">Voltar ao início</a></p>
+</article>
+{% endblock %}

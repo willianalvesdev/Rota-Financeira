@@ -1,0 +1,35 @@
+robots.txt
+llms.txt
+privacy policy
+créditos
+contatos
+direitos autorais
+permitir cookies
+setas coloridas
+resultados no consultar valores
+animações nos textos e gráficos
+telas de carregamento
+widget para celular
+colocar no GitHub
+header fixo celular
+(menu burguer de 2 linhas)
+melhorar gráfico
+ajustar padding seta (Barra Todos os tipos)
+Footer
+melhorar separação de cada coisa
+adicionar cores a Despesas e Receitas
+Aumentar fontes
+Arredondamento de bordas estilo apple (squircle)
+adicionar opção de mudar foto de perfil
+adicionar opção de abrir e fechar menu lateral no pc (estilo chatgpt)
+diminuir tamanho do menu lateral
+Remover Texto de ia do menu lateral "um passo de cada vez..."
+modo Daltonico
+Tirar o "Seu Espaço"
+Notificações
+gráfico linha, estilo bolsa da apple
+no topo do gráfico resultado se o dinheiro subiu ou desceu em comparação ao ano passado
+opção de descrição nas transações e nas metas
+já vir com reserva de emergência por padrão
+fazer as metas ficarem uma da lado da outra
+
